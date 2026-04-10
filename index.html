@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Appointment Accountability Report</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F4F5F7;
+    color: #1A1D23;
+    padding: 32px 24px;
+    min-height: 100vh;
+  }
+
+  .header {
+    max-width: 1280px;
+    margin: 0 auto 28px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: #0F1117;
+  }
+
+  .header p {
+    font-size: 13px;
+    color: #6B7280;
+    margin-top: 4px;
+  }
+
+  .opp-definition {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 12px;
+    color: #1D4ED8;
+    font-weight: 500;
+    max-width: 640px;
+  }
+
+  .opp-definition .def-icon { font-size: 14px; flex-shrink: 0; }
+  .opp-definition strong { font-weight: 700; }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  .stat-card {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 14px 20px;
+    min-width: 130px;
+    text-align: center;
+  }
+
+  .stat-card .num {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .stat-card .label {
+    font-size: 11px;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-top: 4px;
+  }
+
+  .stat-card.green .num { color: #16A34A; }
+  .stat-card.red .num { color: #DC2626; }
+  .stat-card.blue .num { color: #2563EB; }
+  .stat-card.orange .num { color: #EA580C; }
+
+  .table-wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #F3F4F6;
+    background: #FAFAFA;
+    flex-wrap: wrap;
+  }
+
+  .filter-bar span {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    margin-right: 4px;
+  }
+
+  .filter-btn {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid #D1D5DB;
+    background: #fff;
+    cursor: pointer;
+    color: #374151;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    background: #0F1117;
+    color: #fff;
+    border-color: #0F1117;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    background: #F9FAFB;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: #6B7280;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #E5E7EB;
+    white-space: nowrap;
+  }
+
+  thead th .th-sub {
+    font-size: 10px;
+    font-weight: 400;
+    color: #9CA3AF;
+    text-transform: none;
+    letter-spacing: 0;
+    display: block;
+    margin-top: 2px;
+    white-space: normal;
+    max-width: 160px;
+    line-height: 1.3;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #F3F4F6;
+    transition: background 0.1s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #F9FAFB; }
+
+  td {
+    padding: 14px 16px;
+    font-size: 13.5px;
+    vertical-align: top;
+  }
+
+  .td-num {
+    font-size: 12px;
+    color: #9CA3AF;
+    font-weight: 600;
+    width: 36px;
+    text-align: center;
+    padding-top: 16px;
+  }
+
+  .company-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #0F1117;
+    white-space: nowrap;
+  }
+
+  .company-confidence {
+    font-size: 11px;
+    color: #9CA3AF;
+    margin-top: 2px;
+  }
+
+  /* ── Editable Opp Badge ─────────────────────────── */
+  .opp-badge-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .badge:hover { opacity: 0.8; transform: scale(0.97); }
+  .badge:active { transform: scale(0.93); }
+
+  .badge-yes      { background: #DCFCE7; color: #15803D; }
+  .badge-no       { background: #FEE2E2; color: #B91C1C; }
+  .badge-maybe    { background: #FEF9C3; color: #92400E; }
+
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    display: inline-block;
+  }
+
+  .badge-edit-hint {
+    font-size: 10px;
+    color: #CBD5E1;
+    font-weight: 400;
+  }
+
+  .summary-text {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.55;
+    max-width: 480px;
+  }
+
+  .next-steps {
+    font-size: 12px;
+    color: #6B7280;
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .next-steps strong {
+    color: #374151;
+    font-weight: 600;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-right: 4px;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .tag-webstore { background: #EDE9FE; color: #6D28D9; }
+  .tag-apparel  { background: #DBEAFE; color: #1D4ED8; }
+  .tag-event    { background: #FEF3C7; color: #92400E; }
+  .tag-caps     { background: #D1FAE5; color: #065F46; }
+  .tag-charger  { background: #FCE7F3; color: #9D174D; }
+
+  .low-conf {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    background: #FEF9C3;
+    color: #92400E;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+    vertical-align: middle;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Opp Value column ───────────────────────────── */
+  .td-editable {
+    min-width: 140px;
+    vertical-align: middle;
+  }
+
+  .value-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .ai-estimate {
+    font-size: 11px;
+    color: #6366F1;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .ai-estimate .ai-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #6366F1;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  .ai-confidence {
+    font-size: 10px;
+    color: #9CA3AF;
+    font-weight: 400;
+  }
+
+  .editable-value {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+  }
+
+  .editable-value input[type="text"] {
+    width: 100%;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #0F1117;
+    background: transparent;
+    transition: border 0.15s, background 0.15s;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .editable-value input[type="text"]:hover {
+    border-color: #D1D5DB;
+    background: #F9FAFB;
+  }
+
+  .editable-value input[type="text"]:focus {
+    border-color: #F97316;
+    background: #fff;
+    cursor: text;
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+  }
+
+  .editable-value input[type="text"]::placeholder {
+    color: #CBD5E1;
+    font-style: italic;
+  }
+
+  .edit-hint {
+    font-size: 10px;
+    color: #CBD5E1;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.15s;
+  }
+
+  .editable-value:focus-within .edit-hint { opacity: 0; }
+
+  /* ── Follow-up toggle ───────────────────────────── */
+  .followup-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-track {
+    width: 36px;
+    height: 20px;
+    border-radius: 20px;
+    background: #E5E7EB;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toggle-track.on { background: #16A34A; }
+
+  .toggle-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .toggle-track.on .toggle-thumb { left: 19px; }
+
+  .toggle-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+  }
+
+  .toggle-track.on + .toggle-label { color: #16A34A; }
+
+  /* ── Total bar ──────────────────────────────────── */
+  .total-bar {
+    max-width: 1280px;
+    margin: 12px auto 0;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  .total-bar .total-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .total-bar .total-amount {
+    font-size: 22px;
+    font-weight: 700;
+    color: #16A34A;
+    letter-spacing: -0.5px;
+  }
+
+  .total-bar .ai-total {
+    font-size: 12px;
+    color: #6366F1;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .total-bar .total-note {
+    font-size: 11px;
+    color: #9CA3AF;
+    margin-left: auto;
+  }
+
+  @media (max-width: 768px) {
+    td { padding: 10px 10px; }
+    .summary-text { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>Appointment Accountability Report</h1>
+      <p>Cubik Promo &mdash; Sales Visits &mdash; April 10, 2026 &mdash; 15 recordings</p>
+      <div class="opp-definition">
+        <span class="def-icon">📌</span>
+        <span><strong>Opportunity defined:</strong> New business quoting opportunity that would not have existed without this meeting.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card blue">
+      <div class="num">15</div>
+      <div class="label">Appointments</div>
+    </div>
+    <div class="stat-card green">
+      <div class="num" id="statYes">11</div>
+      <div class="label">Opps Generated</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="num" id="statMaybe">3</div>
+      <div class="label">Potential / Warm</div>
+    </div>
+    <div class="stat-card red">
+      <div class="num" id="statNo">1</div>
+      <div class="label">No Opp / Blank</div>
+    </div>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <div class="filter-bar">
+    <span>Filter:</span>
+    <button class="filter-btn active" onclick="filterTable('all', this)">All (15)</button>
+    <button class="filter-btn" onclick="filterTable('yes', this)">✅ Opp Generated</button>
+    <button class="filter-btn" onclick="filterTable('maybe', this)">⚠️ Potential</button>
+    <button class="filter-btn" onclick="filterTable('no', this)">❌ No Opp</button>
+  </div>
+
+  <table id="apptTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Company</th>
+        <th>Opp Generated?
+          <span class="th-sub">Click badge to change</span>
+        </th>
+        <th>Appointment Summary</th>
+        <th>Tags</th>
+        <th>Opp Value ($)
+          <span class="th-sub">AI est. shown in purple · click to override</span>
+        </th>
+        <th>Follow Up Active</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- 1. Landscape Structures
+           AI estimate: 150 event kits × ~$35 avg = $5,250 + web store potential (large upside, not counted) + charger/cap pricing request
+           Immediate quote value: ~$5,250–$8,000. Confidence: MEDIUM (qty known, price range estimated) -->
+      <tr data-opp="yes" data-id="1">
+        <td class="td-num">1</td>
+        <td>
+          <div class="company-name">Landscape Structures</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-yes" onclick="cycleBadge(this, 1)"><span class="badge-dot"></span><span class="badge-text">YES</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Met with contact who requested pricing on nano chargers, Travis Matthews FlexFit caps, and the Trio charger, plus a volunteer event kit (150 packs: t-shirt, water bottle, backpack). Strong print-on-demand web store opportunity — they're actively being pitched by a competitor right now, making timing ideal for a discovery call.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Send pricing on chargers + caps; include Grant's calendar link for a print-on-demand discovery call.</div>
+        </td>
+        <td>
+          <span class="tag tag-charger">Charger</span>
+          <span class="tag tag-caps">Caps</span>
+          <span class="tag tag-webstore">Web Store</span>
+          <span class="tag tag-event">Event Kit</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $6,500 <span class="ai-confidence">MED</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="1" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="1"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 2. Merchant and Gold
+           ~$15K/year, 2 orders. No immediate opp this visit. Pop-up shop is future potential.
+           AI estimate: $0 immediate, $7,500 if pop-up shop converts (half of annual). Confidence: LOW -->
+      <tr data-opp="maybe" data-id="2">
+        <td class="td-num">2</td>
+        <td>
+          <div class="company-name">Merchant and Gold</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-maybe" onclick="cycleBadge(this, 2)"><span class="badge-dot"></span><span class="badge-text">POTENTIAL</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Met with Melissa — no immediate need, spends ~$15K/year across just two orders, so a low-frequency account. She had a bad experience with a pop-up shop through another company but was receptive to hearing about it again.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Send a follow-up email with a pop-up shop example (e.g., Hy-Vee example Matt has).</div>
+        </td>
+        <td>
+          <span class="tag tag-webstore">Pop-Up Shop</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $7,500 <span class="ai-confidence">LOW</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="2" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="2"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 3. Connexus Energy
+           Kids event: 2,500 × $2.50 avg = $6,250. Chargers: 275 × ~$18 = $4,950. Table covers: 2 × ~$80 = $160.
+           Total immediate quote: ~$11,360. Confidence: HIGH (qty and price range stated) -->
+      <tr data-opp="yes" data-id="3">
+        <td class="td-num">3</td>
+        <td>
+          <div class="company-name">Connexus Energy</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-yes" onclick="cycleBadge(this, 3)"><span class="badge-dot"></span><span class="badge-text">YES</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Met with Cassie — apparel is locked up by HR but she loved the pop-up shop concept for making ordering easier. Multiple concrete needs: kids event in August (2,500 light-up items at $2–$3), nano charger pricing (250–300 qty), and two black 6ft table covers with logo.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Send event ideas for kids event, nano charger pricing, and table cover options.</div>
+        </td>
+        <td>
+          <span class="tag tag-event">Event</span>
+          <span class="tag tag-charger">Charger</span>
+          <span class="tag tag-webstore">Pop-Up Shop</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $11,400 <span class="ai-confidence">HIGH</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="3" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="3"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 4. Piper Sandler
+           2,000 employees, web store. No immediate order — post-April follow-up. 
+           Web store annual value estimate: 2,000 × $40 avg annual spend = $80K potential. Near-term quote: ~$15K (first order).
+           Confidence: LOW (no budget discussed, timing deferred) -->
+      <tr data-opp="yes" data-id="4">
+        <td class="td-num">4</td>
+        <td>
+          <div class="company-name">Piper Sandler</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-yes" onclick="cycleBadge(this, 4)"><span class="badge-dot"></span><span class="badge-text">YES</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Met with Stacey and Pamela (boss) — 2,000-employee company with an existing web store that has pain points; strong print-on-demand opportunity but they're in their busy season so follow-up is post-April. Good energy in the meeting despite being rushed; they want to see a sample web store for a company of similar size.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Email both contacts; send example of a print-on-demand web store for ~2,000 employees.</div>
+        </td>
+        <td>
+          <span class="tag tag-webstore">Web Store</span>
+          <span class="tag tag-apparel">Apparel</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $15,000 <span class="ai-confidence">LOW</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="4" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="4"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 5. Bowman & Brooke
+           $20–$50K/year stated. Pop-up shop + caps + chargers.
+           Near-term quote: caps + chargers ~$3,500. Pop-up shop annual: ~$25K mid estimate.
+           Confidence: MED (annual range stated by contact) -->
+      <tr data-opp="yes" data-id="5">
+        <td class="td-num">5</td>
+        <td>
+          <div class="company-name">Bowman &amp; Brooke</div>
+          <div class="company-confidence">Law firm</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-yes" onclick="cycleBadge(this, 5)"><span class="badge-dot"></span><span class="badge-text">YES</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Met with Charlie — existing relationship with Matt, looking to get a pop-up shop rolling; Charlie wants a face-to-face with Matt to plan it out. Introduced PVC patches as a solution to their embroidery logo complexity on Travis Matthews caps — they hadn't heard of them and were interested.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Schedule Matt face-to-face for pop-up shop; send PVC patch mock-up on Travis Matthews cap + cap style options; send nano charger and Trio charger pricing.</div>
+        </td>
+        <td>
+          <span class="tag tag-caps">Caps</span>
+          <span class="tag tag-charger">Charger</span>
+          <span class="tag tag-webstore">Pop-Up Shop</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $25,000 <span class="ai-confidence">MED</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="5" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="5"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 6. Mystic (two recordings combined)
+           Rib Fest: 750 × $100 = $75,000. Golf event: ~50 VIP × $80 = $4,000. Gophers: 1,000 × $7.50 = $7,500. Kim's event: 1,500 × $15 = $22,500.
+           Near-term identifiable: ~$109,000. Rep says $5–6M/year total promo, likely capturing a fraction.
+           Confidence: HIGH for near-term events (qty + price stated), LOW for full account potential -->
+      <tr data-opp="yes" data-id="6">
+        <td class="td-num">6</td>
+        <td>
+          <div class="company-name">Mystic</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-yes" onclick="cycleBadge(this, 6)"><span class="badge-dot"></span><span class="badge-text">YES</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Major meeting — 5 people attended (Shannon primary contact); estimated ~$5–6M/year in promo spend with this likely being only a third of buyers. Multiple upcoming events: Rib Fest (June 27, 750 kits ~$100 each), VIP Golf (Aug 23, caddy-splash style ideas), Gophers game ($5–$10 items, qty 1,000), and a $15 item event for 1–2K where dirty cookie kits were well received.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Internal meeting (rep + Matt + Clayton) to build a full ideation pitch; send ideas directly to each buyer contact to bypass purchasing dept; discuss regular 6-week check-in cadence.</div>
+        </td>
+        <td>
+          <span class="tag tag-event">Event</span>
+          <span class="tag tag-event">Golf</span>
+          <span class="tag tag-event">Rib Fest</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $109,000 <span class="ai-confidence">HIGH</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="6" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="6"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 7. Affinity Plus
+           Cups + puzzle cube pricing only. Soft HR referral — no confirmed opp.
+           Cups: ~100 × $12 = $1,200. Puzzle cube: ~50 × $8 = $400. Total: ~$1,600.
+           Confidence: LOW (no qty stated, soft lead) -->
+      <tr data-opp="maybe" data-id="7">
+        <td class="td-num">7</td>
+        <td>
+          <div class="company-name">Affinity Plus</div>
+          <div class="company-confidence">Credit union / financial — low confidence on full org name</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-maybe" onclick="cycleBadge(this, 7)"><span class="badge-dot"></span><span class="badge-text">POTENTIAL</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Contact requested pricing on aluminum cups and a snake puzzle cube; apparel is handled by HR but she wasn't forthcoming with details. She agreed to pass Cubik's info to HR, which is a soft in but not a confirmed opportunity yet.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Send cup and puzzle cube pricing; follow up on HR referral.</div>
+        </td>
+        <td>
+          <span class="tag tag-apparel">Apparel</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $1,600 <span class="ai-confidence">LOW</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="7" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="7"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 8. Nexus Family
+           Quarterly gifts: 500 × $20 × 4 = $40K/year (already a client, capturing most). New opp = web store migration + conference.
+           Conference: fidget + bag for ~500 people × $25 avg = $12,500. Web store migration: setup + first run ~$8,000.
+           Confidence: MED (existing client, qty/price known for conference) -->
+      <tr data-opp="yes" data-id="8">
+        <td class="td-num">8</td>
+        <td>
+          <div class="company-name">Nexus Family</div>
+          <div class="company-confidence">500 employees, nationwide HQ</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-yes" onclick="cycleBadge(this, 8)"><span class="badge-dot"></span><span class="badge-text">YES</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Existing client (first go-to for quarterly employee gifts, ~$20/person, 500 employees); undergoing a full rebrand starting April with a web store overhaul needed — strong print-on-demand opportunity since they currently run an inventoried store. Conference in June with recurring fidget item + bag need.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Book a discovery call with Tara (web store manager) for Grant re: print-on-demand; send conference ideas.</div>
+        </td>
+        <td>
+          <span class="tag tag-webstore">Web Store</span>
+          <span class="tag tag-event">Conference</span>
+          <span class="tag tag-apparel">Rebrand</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $20,500 <span class="ai-confidence">MED</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="8" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="8"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 9. Blank recording -->
+      <tr data-opp="no" data-id="9">
+        <td class="td-num">9</td>
+        <td>
+          <div class="company-name">Unknown</div>
+          <div class="company-confidence">Recording contained no audio content</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-no" onclick="cycleBadge(this, 9)"><span class="badge-dot"></span><span class="badge-text">NO</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">This recording contained no usable audio — transcription returned only ambient noise. No appointment data available.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Check if this was sent in error or re-record.</div>
+        </td>
+        <td></td>
+        <td class="td-editable" style="opacity:0.35;">
+          <div class="value-wrap">
+            <div class="editable-value"><input type="text" class="opp-value" data-row="9" placeholder="—" disabled /></div>
+          </div>
+        </td>
+        <td class="td-editable" style="opacity:0.35;pointer-events:none;"><label class="followup-toggle"><div class="toggle-track" data-row="9"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 10. J&B Group
+           Custom caps: unknown qty but "a ton" — estimate 200/year × $22 = $4,400. Apparel bulk: ~$3,000.
+           Total near-term: ~$7,400. Confidence: MED (strong buying signal, no qty confirmed) -->
+      <tr data-opp="yes" data-id="10">
+        <td class="td-num">10</td>
+        <td>
+          <div class="company-name">J&amp;B Group</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-yes" onclick="cycleBadge(this, 10)"><span class="badge-dot"></span><span class="badge-text">YES</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Met with Dana and Tia — they buy a large volume of custom caps (prefer Richardson) and are frustrated with their current vendor's slow turnaround; strong likelihood they reach out for cap orders. Also do bulk apparel orders and have an existing print-on-demand web store (~$7K/year), which is too small to pursue.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Follow up on custom caps (Cap America fast-turn program); send apparel pricing.</div>
+        </td>
+        <td>
+          <span class="tag tag-caps">Caps</span>
+          <span class="tag tag-apparel">Apparel</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $7,400 <span class="ai-confidence">MED</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="10" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="10"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 11. Cornerstone Building
+           Mexico event: unknown qty. Jack Nadel client = likely 500+ pcs. Est 500 × $10 avg = $5,000.
+           Confidence: LOW (no qty, no budget stated) -->
+      <tr data-opp="yes" data-id="11">
+        <td class="td-num">11</td>
+        <td>
+          <div class="company-name">Cornerstone Building</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-yes" onclick="cycleBadge(this, 11)"><span class="badge-dot"></span><span class="badge-text">YES</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Celebrating 350 acres milestone with a Mexico-themed event (qty unknown, $5–$15 range); contact has no set budget and just spends what's needed, making volume hard to gauge. Previously used Jack Nadel (a large-volume supplier), suggesting solid spend potential despite the uncertainty.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Send a smattering of beach/Mexico themed ideas including custom flip flops with sand-print soles.</div>
+        </td>
+        <td>
+          <span class="tag tag-event">Event</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $5,000 <span class="ai-confidence">LOW</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="11" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="11"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 12. Julia (Unknown company)
+           Bottles: 250 × ~$14 = $3,500. Client portal setup + Zyn sourcing: ~$1,500.
+           Total: ~$5,000. Confidence: MED (qty stated, price competitive) -->
+      <tr data-opp="yes" data-id="12">
+        <td class="td-num">12</td>
+        <td>
+          <div class="company-name">Unknown <span class="low-conf">LOW CONF</span></div>
+          <div class="company-confidence">Contact: Julia — uses Halo and other vendors; lost marketing director recently</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-yes" onclick="cycleBadge(this, 12)"><span class="badge-dot"></span><span class="badge-text">YES</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Julia requested bottle pricing (qty 125 &amp; 250) and wants a client portal for reordering core stock items; company is in flux after losing their marketing director, creating an opening to capture more of their business. Rep also identified a sourcing opportunity for Zyn container products as a potentially popular new item.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Send bottle pricing (come in competitive vs. existing vendor); send client portal link; source Zyn container options.</div>
+        </td>
+        <td>
+          <span class="tag tag-webstore">Client Portal</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $5,000 <span class="ai-confidence">MED</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="12" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="12"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 13. TEL
+           Semi-con giveaway: 3,500 avg × $4.50 = $15,750. Apparel (Collars & Co): ~$2,000.
+           Web store wedge: potential large upside, not counted in near-term.
+           Total near-term: ~$17,750. Confidence: MED (qty range stated, price cap stated) -->
+      <tr data-opp="yes" data-id="13">
+        <td class="td-num">13</td>
+        <td>
+          <div class="company-name">TEL</div>
+          <div class="company-confidence">Tech/semiconductor — Brienne &amp; Darius in-person, 3 virtual</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-yes" onclick="cycleBadge(this, 13)"><span class="badge-dot"></span><span class="badge-text">YES</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Met with Brienne and Darius (+ 3 virtual) — semi-con event coming up needing $5-or-less items at 2–5K qty; print-on-demand hard goods got an enthusiastic reaction and could be the wedge to take over their web store. Warm referral generated: Brienne's former boss Katie Crist at Synopsys is a strong lead who does a ton of promo.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Send semi-con giveaway ideas ($5 or less); send Collars &amp; Co shirt info to Brienne; reach out to Katie Crist at Synopsys (mention Brienne referred).</div>
+        </td>
+        <td>
+          <span class="tag tag-event">Semi-Con</span>
+          <span class="tag tag-webstore">Web Store</span>
+          <span class="tag tag-apparel">Apparel</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $17,750 <span class="ai-confidence">MED</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="13" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="13"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+      <!-- 14. ATCO
+           Caps: ~24 × $55 = $1,320. Bar stools: 6 × ~$200 = $1,200. Counter mats: ~$300. Pens: 1,000 × $0.80 = $800. Cups: ~$200.
+           Total: ~$3,820. Rep flagged limited potential overall.
+           Confidence: MED (qty mentioned for most items) -->
+      <tr data-opp="maybe" data-id="14">
+        <td class="td-num">14</td>
+        <td>
+          <div class="company-name">ATCO</div>
+          <div class="company-confidence">Contact: Nick Lane — distributes to distributors</div>
+        </td>
+        <td>
+          <div class="opp-badge-wrap">
+            <span class="badge badge-maybe" onclick="cycleBadge(this, 14)"><span class="badge-dot"></span><span class="badge-text">POTENTIAL</span></span>
+            <span class="badge-edit-hint">click to change</span>
+          </div>
+        </td>
+        <td>
+          <div class="summary-text">Met with Nick Lane — interested in fitted Travis Matthews caps (or flex-fit alternatives), bar stool options with lead times, counter mats, cheap pens (qty 1,000+), and ceramic/stainless cup options for a tight-clearance coffee machine. Rep noted limited overall potential — mostly reorder-type business with golf polos and caps as main purchases.</div>
+          <div class="next-steps"><strong>Next steps:</strong> Send fitted cap options, bar stool options + lead times, counter mat options, top 3 pen choices, and low-profile cup/mug options.</div>
+        </td>
+        <td>
+          <span class="tag tag-caps">Caps</span>
+          <span class="tag tag-apparel">Apparel</span>
+        </td>
+        <td class="td-editable">
+          <div class="value-wrap">
+            <div class="ai-estimate"><span class="ai-dot"></span> AI est: $3,820 <span class="ai-confidence">MED</span></div>
+            <div class="editable-value"><input type="text" class="opp-value" data-row="14" placeholder="override..." /><span class="edit-hint">✏️</span></div>
+          </div>
+        </td>
+        <td class="td-editable"><label class="followup-toggle"><div class="toggle-track" data-row="14"><div class="toggle-thumb"></div></div><span class="toggle-label">No</span></label></td>
+      </tr>
+
+    </tbody>
+  </table>
+</div>
+
+<div class="total-bar">
+  <div>
+    <div class="total-label">Your Entered Value</div>
+    <div class="total-amount" id="totalValue">$0</div>
+  </div>
+  <div style="width:1px;height:48px;background:#E5E7EB;"></div>
+  <div>
+    <div class="total-label">AI Estimated Total</div>
+    <div class="total-amount" style="color:#6366F1" id="aiTotal">$0</div>
+    <div class="ai-total" id="aiTotalNote"></div>
+  </div>
+  <div style="width:1px;height:48px;background:#E5E7EB;"></div>
+  <div>
+    <div class="total-label">Follow-Ups Active</div>
+    <div class="total-amount" style="color:#2563EB" id="followupCount">0</div>
+  </div>
+  <div class="total-note">AI estimates are based on quantities and prices mentioned in recordings. Click any value to override. All data saves in your browser.</div>
+</div>
+
+<div style="max-width:1280px; margin: 10px auto 0; font-size: 12px; color: #9CA3AF;">
+  Note: Recording #9 (WhatsAppAudio2026-04-10at3.27.10PM(1).ogg) contained no usable audio. Recordings for Mystic were split across two files and combined into one row. Total unique appointments: 14. &nbsp;|&nbsp; Opp badge is clickable: cycles YES → POTENTIAL → NO.
+</div>
+
+<script>
+// ── AI estimates (pre-set, read-only reference) ──────────
+const AI_ESTIMATES = {
+  1: 6500, 2: 7500, 3: 11400, 4: 15000, 5: 25000,
+  6: 109000, 7: 1600, 8: 20500, 9: 0, 10: 7400,
+  11: 5000, 12: 5000, 13: 17750, 14: 3820
+};
+
+// ── Badge cycle ──────────────────────────────────────────
+const BADGE_CYCLE = [
+  { state: 'yes',   cls: 'badge-yes',   text: 'YES',       opp: 'yes'   },
+  { state: 'maybe', cls: 'badge-maybe', text: 'POTENTIAL', opp: 'maybe' },
+  { state: 'no',    cls: 'badge-no',    text: 'NO',        opp: 'no'    }
+];
+
+function cycleBadge(badge, rowId) {
+  const textEl = badge.querySelector('.badge-text');
+  const current = textEl.textContent.trim();
+  const idx = BADGE_CYCLE.findIndex(b => b.text === current);
+  const next = BADGE_CYCLE[(idx + 1) % BADGE_CYCLE.length];
+
+  badge.className = 'badge ' + next.cls;
+  textEl.textContent = next.text;
+
+  // Update row data-opp for filtering
+  const row = badge.closest('tr');
+  row.dataset.opp = next.opp;
+
+  // Save
+  const d = loadData();
+  d['opp_' + rowId] = next.state;
+  saveData(d);
+
+  updateStats();
+}
+
+// ── Filter ───────────────────────────────────────────────
+function filterTable(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#apptTable tbody tr').forEach(row => {
+    row.style.display = (type === 'all' || row.dataset.opp === type) ? '' : 'none';
+  });
+}
+
+// ── Stats counter ────────────────────────────────────────
+function updateStats() {
+  let yes = 0, maybe = 0, no = 0;
+  document.querySelectorAll('#apptTable tbody tr').forEach(row => {
+    if (row.dataset.opp === 'yes') yes++;
+    else if (row.dataset.opp === 'maybe') maybe++;
+    else no++;
+  });
+  document.getElementById('statYes').textContent = yes;
+  document.getElementById('statMaybe').textContent = maybe;
+  document.getElementById('statNo').textContent = no;
+}
+
+// ── Persistence ──────────────────────────────────────────
+const STORAGE_KEY = 'cubik_appt_data_v2';
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { return {}; }
+}
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// ── Totals ───────────────────────────────────────────────
+function updateTotals() {
+  let userTotal = 0;
+  let aiTotal = 0;
+  let followCount = 0;
+
+  document.querySelectorAll('.opp-value').forEach(inp => {
+    const raw = inp.value.replace(/[$,\s]/g, '');
+    const num = parseFloat(raw);
+    if (!isNaN(num)) userTotal += num;
+  });
+
+  Object.values(AI_ESTIMATES).forEach(v => aiTotal += v);
+
+  document.querySelectorAll('.toggle-track.on').forEach(() => followCount++);
+
+  document.getElementById('totalValue').textContent =
+    '$' + userTotal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+  document.getElementById('aiTotal').textContent =
+    '$' + aiTotal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+  document.getElementById('aiTotalNote').textContent = 'across 13 appointments';
+  document.getElementById('followupCount').textContent = followCount;
+}
+
+// ── Init ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  const data = loadData();
+
+  // Restore opp badge states
+  document.querySelectorAll('[onclick^="cycleBadge"]').forEach(badge => {
+    const match = badge.getAttribute('onclick').match(/cycleBadge\(this,\s*(\d+)\)/);
+    if (!match) return;
+    const rowId = parseInt(match[1]);
+    const saved = data['opp_' + rowId];
+    if (saved) {
+      const def = BADGE_CYCLE.find(b => b.state === saved);
+      if (def) {
+        badge.className = 'badge ' + def.cls;
+        badge.querySelector('.badge-text').textContent = def.text;
+        badge.closest('tr').dataset.opp = def.opp;
+      }
+    }
+  });
+
+  // Restore opp values
+  document.querySelectorAll('.opp-value').forEach(inp => {
+    const row = inp.dataset.row;
+    if (data['val_' + row]) inp.value = data['val_' + row];
+    inp.addEventListener('input', function() {
+      const d = loadData();
+      d['val_' + row] = this.value;
+      saveData(d);
+      updateTotals();
+    });
+  });
+
+  // Restore + wire toggles
+  document.querySelectorAll('.toggle-track').forEach(track => {
+    const row = track.dataset.row;
+    if (!row) return;
+    const label = track.nextElementSibling;
+    if (data['fu_' + row] === 'on') {
+      track.classList.add('on');
+      label.textContent = 'Yes';
+    }
+    track.parentElement.addEventListener('click', function(e) {
+      e.preventDefault();
+      const isOn = track.classList.toggle('on');
+      label.textContent = isOn ? 'Yes' : 'No';
+      const d = loadData();
+      d['fu_' + row] = isOn ? 'on' : 'off';
+      saveData(d);
+      updateTotals();
+    });
+  });
+
+  updateStats();
+  updateTotals();
+});
+</script>
+</body>
+</html>
